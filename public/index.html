@@ -54,14 +54,7 @@ main{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;alig
 .btn.primary:hover{background:#2563eb;border-color:#2563eb;color:#fff;}
 .btn.danger{border-color:var(--danger);color:var(--danger);background:transparent;}
 .btn.danger:hover{background:rgba(239,68,68,.08);}
-.log-card{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.log-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.1rem;border-bottom:1px solid var(--border);}
-.log-label{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
-.log-body{font-family:var(--mono);font-size:.75rem;padding:.75rem 1.1rem;max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.log-entry{display:flex;gap:.75rem;line-height:1.5;}
-.log-time{color:var(--accent);flex-shrink:0;} .log-text{color:var(--text);word-break:break-all;}
-.log-text.ok{color:var(--accent2);} .log-text.warn{color:var(--accent3);} .log-text.err{color:var(--danger);}
-.log-empty{color:var(--muted);font-style:italic;}
+
 .info-card{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
 .info-header{padding:.75rem 1.1rem;border-bottom:1px solid var(--border);font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
 .info-grid{padding:.85rem 1.1rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
@@ -210,15 +203,7 @@ main{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;alig
     </div>
   </div>
 
-  <div class="log-card">
-    <div class="log-header">
-      <span class="log-label">Activity Log</span>
-      <button class="btn" style="padding:.2rem .65rem;font-size:.72rem" onclick="clearLog()">Clear</button>
-    </div>
-    <div class="log-body" id="log-body">
-      <div class="log-empty">Waiting&hellip;</div>
-    </div>
-  </div>
+
 </main>
 
 <div id="toast"></div>
@@ -277,7 +262,7 @@ function activate() {
   setState('live','Connected','You are connected to seal-gmyx.onrender.com and the session is active.');
   setIcon('live');
   document.getElementById('status-card').classList.add('active');
-  log('Key session started — connected to seal-gmyx.onrender.com','ok');
+  console.console.log('Key session started — connected to seal-gmyx.onrender.com');
   toast('Connected to seal-gmyx.onrender.com!');
 }
 
@@ -297,7 +282,7 @@ function stopSession() {
   document.getElementById('status-card').classList.remove('active');
   setState('idle','Stopped','Session ended. Click Restart to begin again.');
   setIcon('idle');
-  log('Session stopped.','warn');
+  console.console.log('Session stopped.');
   toast('Session stopped.');
 }
 
@@ -332,7 +317,7 @@ function restoreSession() {
   if (_wasActive && isActive) {
     socket.emit('host:create',{passwordHash:null});
     if (PARAM_GLOBAL) setTimeout(() => socket.emit('host:set-public',{isPublic:true,label:PARAM_NAME}), 600);
-    hideReconnectBanner(); log('Reconnected — session re-registered','ok'); toast('Reconnected!');
+    hideReconnectBanner(); console.console.log('Reconnected — session re-registered'); toast('Reconnected!');
     return;
   }
   try {
@@ -353,13 +338,13 @@ socket.on('connect', () => {
   pill.textContent = '\u25CF Connected'; pill.style.color = 'var(--accent2)';
   document.getElementById('info-transport').textContent = socket.io.engine.transport.name;
   startKeepalive(); hideReconnectBanner(); restoreSession();
-  log('Connected to signaling server','ok');
+  console.console.log('Connected to signaling server');
 });
 socket.on('disconnect', reason => {
   const pill = document.getElementById('socket-pill');
   pill.textContent = '\u25CF Disconnected'; pill.style.color = 'var(--danger)';
   stopKeepalive(); showReconnectBanner('Disconnected: ' + reason);
-  log('Disconnected: ' + reason,'err');
+  console.log('Disconnected: ' + reason,'err');
 });
 socket.on('connect_error', () => showReconnectBanner('Connection error \u2014 retrying\u2026'));
 
@@ -374,7 +359,7 @@ socket.on('host:code', ({ code }) => {
     setIcon('live');
     document.getElementById('status-card').classList.add('active');
   }
-  log('Session code: ' + code,'ok');
+  console.log('Session code: ' + code,'ok');
   persistState();
 });
 
@@ -384,7 +369,7 @@ socket.on('viewer:joined', ({ viewerId }) => {
 });
 socket.on('viewer:left', ({ viewerId }) => {
   commandViewers.delete(viewerId); updateViewerCount();
-  log('Viewer disconnected.','warn');
+  console.console.log('Viewer disconnected.');
   if (!commandViewers.size) setState('live','Active','Key session running. Waiting for commands.');
 });
 
@@ -395,13 +380,13 @@ socket.on('cmd:open-url', ({ url, mode, width, height, left, top }) => {
     window.open(url, tabId, f);
   } else { window.open(url,'_blank'); }
   socket.emit('host:tab-opened',{tabId,url,mode:mode||'tab'});
-  log('Opened URL: ' + url,'ok');
+  console.log('Opened URL: ' + url,'ok');
 });
-socket.on('cmd:close-tab', ({ tabId }) => { socket.emit('host:tab-closed',{tabId}); log('Tab close ack: ' + tabId); });
+socket.on('cmd:close-tab', ({ tabId }) => { socket.emit('host:tab-closed',{tabId}); console.log('Tab close ack: ' + tabId); });
 
 // Sound
 let sndChunks=[], sndMime='audio/mpeg', sndVol=1, hostAudio=null;
-socket.on('cmd:sound-start', ({ mimeType, volume }) => { sndChunks=[]; sndMime=mimeType||'audio/mpeg'; sndVol=volume||1; log('Receiving audio\u2026'); });
+socket.on('cmd:sound-start', ({ mimeType, volume }) => { sndChunks=[]; sndMime=mimeType||'audio/mpeg'; sndVol=volume||1; console.console.log('Receiving audio\\u2026'); });
 socket.on('cmd:sound-chunk', ({ chunk, index }) => { sndChunks[index]=chunk; });
 socket.on('cmd:sound-end', () => {
   try {
@@ -415,15 +400,15 @@ socket.on('cmd:sound-end', () => {
     hostAudio.ontimeupdate = () => socket.emit('host:sound-progress',{current:hostAudio.currentTime,duration:hostAudio.duration||0});
     hostAudio.onended = () => { URL.revokeObjectURL(url); hostAudio=null; socket.emit('host:sound-ended'); };
     hostAudio.play().catch(e=>log('Audio error: '+e.message,'err'));
-    log('Playing audio from viewer','ok');
-  } catch(e) { log('Audio error: '+e.message,'err'); }
+    console.console.log('Playing audio from viewer');
+  } catch(e) { console.log('Audio error: '+e.message,'err'); }
   sndChunks=[];
 });
-socket.on('cmd:stop-sound', () => { if(hostAudio){hostAudio.pause();hostAudio.src='';hostAudio=null;socket.emit('host:sound-ended');log('Audio stopped.');} });
+socket.on('cmd:stop-sound', () => { if(hostAudio){hostAudio.pause();hostAudio.src='';hostAudio=null;socket.emit('host:sound-ended');console.console.log('Audio stopped.');} });
 
 // Files
 let fileChunks=[], fileName='', fileMime='';
-socket.on('cmd:file-start', ({ name, mimeType, totalChunks }) => { fileChunks=new Array(totalChunks); fileName=name; fileMime=mimeType; log('Receiving file: '+name); });
+socket.on('cmd:file-start', ({ name, mimeType, totalChunks }) => { fileChunks=new Array(totalChunks); fileName=name; fileMime=mimeType; console.log('Receiving file: '+name); });
 socket.on('cmd:file-chunk', ({ chunk, index }) => { fileChunks[index]=chunk; });
 socket.on('cmd:file-end', () => {
   try {
@@ -435,8 +420,8 @@ socket.on('cmd:file-end', () => {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
     socket.emit('host:file-received',{name:fileName});
-    log('File downloaded: '+fileName,'ok'); fileChunks=[];
-  } catch(e) { log('File error: '+e.message,'err'); }
+    console.log('File downloaded: '+fileName,'ok'); fileChunks=[];
+  } catch(e) { console.log('File error: '+e.message,'err'); }
 });
 
 // Info broadcast
@@ -485,16 +470,7 @@ function showReconnectBanner(msg) { document.getElementById('reconnect-msg').tex
 function hideReconnectBanner() { document.getElementById('reconnect-banner').style.display='none'; }
 let _tt=null;
 function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); if(_tt) clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3000); }
-function log(text,type) {
-  const body=document.getElementById('log-body'), empty=body.querySelector('.log-empty');
-  if(empty) empty.remove();
-  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const entry=document.createElement('div'); entry.className='log-entry fadein';
-  entry.innerHTML='<span class="log-time">'+now+'</span><span class="log-text '+(type||'')+'">'+String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>';
-  body.appendChild(entry); body.scrollTop=body.scrollHeight;
-  while(body.children.length>100) body.removeChild(body.firstChild);
-}
-function clearLog() { document.getElementById('log-body').innerHTML='<div class="log-empty">Log cleared.</div>'; }
+
 
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') persistState(); else if(document.visibilityState==='visible'&&!socket.connected) showReconnectBanner('Reconnecting after wake\u2026'); });
 window.addEventListener('beforeunload',persistState);
